@@ -1,0 +1,44 @@
+syntax = "proto3";
+
+package com.afkplayer.service.user;
+
+service User {
+	rpc Create(user) returns (Response){}
+	rpc Get(user) returns (Response){}
+	rpc GetAll(Request) returns (Response){}
+	rpc Auth(user) returns (Response){}
+	rpc ValidateToken(Token) returns (Response){}
+}
+
+message user {
+	uint64 id = 1;
+	string name = 2;
+	string password = 3;
+	string email = 4;
+	uint64 createdTime = 5;
+	uint64 updatedTime = 6;
+}
+
+message Token {
+	string value = 1;
+	bool isValid = 2;
+	Error error = 3;
+}
+
+message Error {
+	int32 code = 1;
+	string detail = 2;
+}
+
+message Request {
+	user user = 1;
+	Token token = 2;
+}
+
+message Response {
+	bool success = 1;
+	user user = 2;
+	repeated user users = 4;
+	Token token = 3;
+	repeated Error errors = 5;
+}

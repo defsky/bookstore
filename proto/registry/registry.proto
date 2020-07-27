@@ -1,0 +1,11 @@
+syntax = "proto3";
+
+package com.afkplayer.service.registry;
+
+service Registry {
+	rpc Create(user) returns (Response){}
+	rpc Get(user) returns (Response){}
+	rpc GetAll(Request) returns (Response){}
+	rpc Auth(user) returns (Response){}
+	rpc ValidateToken(Token) returns (Response){}
+}

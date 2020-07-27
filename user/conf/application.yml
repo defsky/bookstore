@@ -1,0 +1,29 @@
+app:
+  database:
+    enabled: true
+    default:
+      driver: mysql
+      connection: user
+    mysql:
+      user:
+        host: localhost
+        port: 3306
+        database: test
+        user: root
+        password: root
+        charset: utf8
+        maxIdleConnection: 1
+        maxOpenConnection: 3
+        maxConnLiftime: 100
+    mssql:
+      u928:
+        host: localhost
+        port: 1433
+        database: test
+        user: reader
+        password: 123456
+        charset: utf8
+        maxIdleConnection: 1
+        maxOpenConnection: 3
+        maxConnLiftime: 100
+        
