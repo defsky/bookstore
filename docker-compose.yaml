@@ -1,8 +1,8 @@
 # docker-compose.yaml
-# 同样遵循严格的缩进
+
 version: '3.1'
 
-# services 定义容器列表
+# services
 services:
   user-cli:
     build: ./user-cli
@@ -10,7 +10,7 @@ services:
     environment:
       MICRO_REGISTRY: "etcd"
       MICRO_REGISTRY_ADDRESS: "etcd:2379"
-    depends_on: 
+    depends_on:
       - user
       - etcd
   user:
@@ -30,8 +30,12 @@ services:
       - etcd
   database:
     image: postgres
-    environment: 
-      POSTGRES_PASSWORD: "mypasswd"
+    environment:
+      POSTGRES_PASSWORD: mypasswd
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_DB: bookstore
+    volumes:
+      - ./user/data:/var/lib/postgresql/data/pgdata
   etcd:
     image: bitnami/etcd
     environment:
