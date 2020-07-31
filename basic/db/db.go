@@ -27,7 +27,6 @@ func init() {
 	dbCfg := config.GetConfig().DB
 	db, err := gorm.Open(dbCfg.Driver, dbCfg.URL)
 	if err != nil {
-
 		panic(err)
 	}
 	if err := db.DB().Ping(); err != nil {

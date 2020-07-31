@@ -36,10 +36,15 @@ func NewRegistry(driver string) Registry {
 				Endpoints:   strings.Split(a, ","),
 				DialTimeout: 5 * time.Second,
 			}
+			c, err := etcd.New(cfg)
+			if err != nil {
+				log.Fatalln("etcd client initiate failed")
+			}
 			return &etcdRegistry{
 				address: a,
 				config:  cfg,
 				close:   make(chan struct{}),
+				client:  c,
 			}
 		}
 		log.Fatalln("please specify registry address with MICRO_REGISTRY_ADDRESS")
@@ -57,11 +62,12 @@ type etcdRegistry struct {
 	config  etcd.Config
 	address string
 	close   chan struct{}
+	client  *etcd.Client
 }
 
-type serviceInfo struct {
+type instanceInfo struct {
 	// IPs ip addresses
-	UUID string   `json:"UUID"`
+	// UUID string   `json:"UUID"`
 	IPs  []string `json:"ips"`
 	Port int      `json:"port"`
 }
@@ -92,11 +98,11 @@ func (r *etcdRegistry) Register(s *Service) {
 		log.Fatalln("invalid port number")
 	}
 
-	etcdClient, err := etcd.New(r.config)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	lease := etcd.NewLease(etcdClient)
+	// etcdClient, err := etcd.New(r.config)
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	lease := etcd.NewLease(r.client)
 	leaseResp, err := lease.Grant(context.TODO(), 10)
 	if err != nil {
 		log.Fatalln(err)
@@ -125,9 +131,9 @@ func (r *etcdRegistry) Register(s *Service) {
 		}
 	}()
 
-	kv := etcd.NewKV(etcdClient)
+	kv := etcd.NewKV(r.client)
 
-	info := &serviceInfo{
+	info := &instanceInfo{
 		IPs:  ip,
 		Port: port,
 	}
@@ -147,31 +153,33 @@ func (r *etcdRegistry) Register(s *Service) {
 func (r *etcdRegistry) UnRegister(s *Service) {
 	log.Printf("unregister service [etcd] %s:%s:%s\n", s.Name, s.Version, s.UUID)
 	r.close <- struct{}{}
+	kv := etcd.NewKV(r.client)
+	kv.Delete(context.TODO(), fmt.Sprintf("/micro/%s/%s/%s", s.Name, s.Version, s.UUID))
 }
 func (r *etcdRegistry) Query(c *Client) (string, error) {
 	log.Printf("query service [etcd] %s:%s\n", c.Name, c.Version)
 
-	etcdClient, err := etcd.New(r.config)
-	if err != nil {
-		log.Fatalln(err)
-	}
-	kv := etcd.NewKV(etcdClient)
+	// etcdClient, err := etcd.New(r.config)
+	// if err != nil {
+	// 	log.Fatalln(err)
+	// }
+	kv := etcd.NewKV(r.client)
 	resp, err := kv.Get(context.TODO(), fmt.Sprintf("/micro/%s/%s", c.Name, c.Version), etcd.WithPrefix())
 	if err != nil {
 		log.Fatalln(err)
 	}
-	var info *serviceInfo
+	infos := make(map[string]*instanceInfo)
 
 	// query instances for service at specify version
 DONE:
 	for _, v := range resp.Kvs {
 
-		svcInfo := &serviceInfo{}
+		svcInfo := &instanceInfo{}
 		if err := json.Unmarshal(v.Value, svcInfo); err == nil {
 			k := strings.Split(string(v.Key), "/")
 			sid := k[len(k)-1]
-			svcInfo.UUID = sid
-			info = svcInfo
+			// svcInfo.UUID = sid
+			infos[sid] = svcInfo
 			break DONE
 		} else {
 			log.Println(err)
@@ -180,9 +188,16 @@ DONE:
 
 	// TODO: load balance between multiple instances
 
-	log.Printf("query response: %v\n", info)
-	if info != nil && len(info.IPs) > 0 {
-		return fmt.Sprintf("%s:%d", info.IPs[0], info.Port), nil
+	if s, err := json.Marshal(infos); err == nil {
+		log.Printf("query response: %s\n", s)
+	}
+
+	if len(infos) > 0 {
+		for _, v := range infos {
+			if len(v.IPs) > 0 {
+				return fmt.Sprintf("%s:%d", v.IPs[0], v.Port), nil
+			}
+		}
 	}
 	return "", status.Errorf(codes.NotFound, fmt.Sprintf("service %s not found", c.Name))
 }

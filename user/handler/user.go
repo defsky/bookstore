@@ -23,14 +23,14 @@ type handler struct {
 }
 
 func (h *handler) Create(ctx context.Context, req *user.User) (resp *user.Response, err error) {
-	var email, passwd string
+	log.Printf("request for create: %v", req)
 
+	var email, passwd string
 	if email, passwd = req.Email, req.Password; len(email) == 0 || len(passwd) == 0 {
 		resp.Success = false
 
 		return nil, errors.New("user-service: email or password invalid")
 	}
-	log.Printf("New request create user: %s %s", email, passwd)
 
 	var u *model.User
 	u, err = h.repo.GetUserByEmail(req.Email)
@@ -55,7 +55,7 @@ func (h *handler) Create(ctx context.Context, req *user.User) (resp *user.Respon
 
 		return
 	}
-	log.Printf("user created: %v", u)
+	log.Printf("response for create: %v", u)
 
 	resp.User = &user.User{
 		Id:          uint64(u.ID),
@@ -71,14 +71,43 @@ func (h *handler) Create(ctx context.Context, req *user.User) (resp *user.Respon
 }
 
 func (h *handler) Get(ctx context.Context, req *user.User) (resp *user.Response, err error) {
+	log.Printf("request for get: %v", req)
+
+	var u *model.User
+	resp = &user.Response{}
+
+	u, err = h.repo.GetUserByEmail(req.Email)
+	if err != nil {
+		log.Println(err)
+
+		resp.Success = false
+
+		return
+	}
+
+	log.Printf("response for get: %v", u)
+
+	resp.User = &user.User{
+		Id:          uint64(u.ID),
+		Email:       u.Email,
+		Password:    u.Password,
+		Name:        u.Name,
+		CreatedTime: uint64(u.CreatedAt.Unix()),
+		UpdatedTime: uint64(u.UpdatedAt.Unix()),
+	}
+	resp.Success = true
+
 	return
 }
 
 func (h *handler) GetAll(ctx context.Context, req *user.Request) (resp *user.Response, err error) {
+	log.Printf("request for GetAll: %v", req)
 	return
 }
 
 func (h *handler) Auth(ctx context.Context, req *user.User) (resp *user.Response, err error) {
+	log.Printf("request for auth: %v", req)
+
 	var u *model.User
 	u, err = h.repo.GetUserByEmailAndPassword(req.Email, req.Password)
 
@@ -102,18 +131,20 @@ func (h *handler) Auth(ctx context.Context, req *user.User) (resp *user.Response
 		IsValid: true,
 	}
 
+	log.Printf("response for auth: %v", resp.Token)
 	return
 }
 
 func (h *handler) ValidateToken(ctx context.Context, req *user.Token) (resp *user.Response, err error) {
+	log.Printf("request for validate: %v", req)
 	var valid bool
 	valid, err = h.tkRepo.Validate(req.Value)
 
 	resp = &user.Response{}
 	resp.Success = valid
-	if err != nil {
-		return
-	}
+
+	log.Printf("response for validate: %v", valid)
+
 	return
 }
 
