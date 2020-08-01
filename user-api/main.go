@@ -17,14 +17,11 @@ import (
 // @version 1.0
 // @description This is RESTful API for bookstore project
 // @termsOfService http://www.sun-hoo.cn/terms/
-
 // @contact.name API Support
 // @contact.url http://www.sun-hoo.cn/surpport
 // @contact.email defsky@qq.com
-
 // @license.name Apache 2.0
 // @license.url http://www.apache.org/licenses/LICENSE-2.0.html
-
 // @host 192.168.100.210:8080
 // @BasePath /api/v1
 func main() {
@@ -42,6 +39,7 @@ func main() {
 		users := v1.Group("/users")
 		{
 			users.GET(":id", c.GetUser)
+			users.POST("", c.AddUser)
 		}
 	}
 

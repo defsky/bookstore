@@ -38,3 +38,20 @@ func (c *Controller) getUserByID(id int) (*model.User, error) {
 		Email: resp.User.Email,
 	}, nil
 }
+
+func (c *Controller) createUser(u model.User) (*model.User, error) {
+	resp, err := c.userClient.Create(context.Background(), &userPb.User{
+		Name:     u.Name,
+		Email:    u.Email,
+		Password: u.Password,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return &model.User{
+		ID:       int(resp.User.Id),
+		Email:    resp.User.Email,
+		Name:     resp.User.Name,
+		Password: resp.User.Password,
+	}, nil
+}

@@ -29,7 +29,7 @@ func (h *handler) Create(ctx context.Context, req *user.User) (resp *user.Respon
 	if email, passwd = req.Email, req.Password; len(email) == 0 || len(passwd) == 0 {
 		resp.Success = false
 
-		return nil, errors.New("user-service: email or password invalid")
+		return nil, status.Error(codes.InvalidArgument, "email or password invalid")
 	}
 
 	var u *model.User
@@ -49,6 +49,7 @@ func (h *handler) Create(ctx context.Context, req *user.User) (resp *user.Respon
 
 	resp = &user.Response{}
 	if err != nil {
+		err = status.Errorf(codes.Internal, "user create failed: %s", err)
 		log.Println(err)
 
 		resp.Success = false
@@ -81,9 +82,10 @@ func (h *handler) Get(ctx context.Context, req *user.User) (resp *user.Response,
 	} else if len(req.Email) > 0 {
 		u, err = h.repo.GetUserByEmail(req.Email)
 	} else {
-		err = status.Error(codes.InvalidArgument, "need user id or email")
+		err = errors.New("need user id or email")
 	}
 	if err != nil {
+		err = status.Errorf(codes.Internal, "user get failed: %s", err)
 		log.Println(err)
 
 		resp.Success = false
@@ -114,30 +116,27 @@ func (h *handler) GetAll(ctx context.Context, req *user.Request) (resp *user.Res
 func (h *handler) Auth(ctx context.Context, req *user.User) (resp *user.Response, err error) {
 	log.Printf("request for auth: %v", req)
 
-	var u *model.User
-	u, err = h.repo.GetUserByEmailAndPassword(req.Email, req.Password)
-
 	resp = &user.Response{}
-	if err != nil {
-		resp.Success = false
+	var u *model.User
 
-		return
+	if u, err = h.repo.GetUserByEmailAndPassword(req.Email, req.Password); err == nil {
+		tk, er := h.tkRepo.Create(u)
+		if er == nil {
+			resp.Success = true
+			resp.Token = &user.Token{
+				Value:   tk.Value,
+				IsValid: true,
+			}
+
+			log.Printf("response for auth: %v", resp.Token)
+			return
+		}
+		err = er
 	}
 
-	tk, err := h.tkRepo.Create(u)
-	if err != nil {
-		resp.Success = false
+	err = status.Errorf(codes.Internal, "user auth failed: %s", err)
+	resp.Success = false
 
-		return
-	}
-
-	resp.Success = true
-	resp.Token = &user.Token{
-		Value:   tk.Value,
-		IsValid: true,
-	}
-
-	log.Printf("response for auth: %v", resp.Token)
 	return
 }
 
@@ -145,7 +144,9 @@ func (h *handler) ValidateToken(ctx context.Context, req *user.Token) (resp *use
 	log.Printf("request for validate: %v", req)
 	var valid bool
 	valid, err = h.tkRepo.Validate(req.Value)
-
+	if err != nil {
+		err = status.Errorf(codes.Internal, "validate failed: %s", err)
+	}
 	resp = &user.Response{}
 	resp.Success = valid
 

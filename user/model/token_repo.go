@@ -1,13 +1,13 @@
 package model
 
 import (
+	"errors"
+	"fmt"
 	"time"
 
 	"github.com/defsky/bookstore/basic/db"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/jinzhu/gorm"
-	"google.golang.org/grpc/codes"
-	"google.golang.org/grpc/status"
 )
 
 var myJWTSecret = []byte("my jwt secret")
@@ -72,11 +72,11 @@ func (repo *TokenRepo) Validate(token string) (bool, error) {
 			if kid, ok := token.Header["kid"].(float64); ok {
 				u := &User{}
 				if repo.db.Where("id=?", kid).First(u).RecordNotFound() {
-					return nil, status.Error(codes.NotFound, "user not found")
+					return nil, errors.New("user not found")
 				}
 				return []byte(u.Password), nil
 			}
-			return nil, status.Errorf(codes.Internal, "type of kid should be uint: %v", token.Header["kid"])
+			return nil, fmt.Errorf("type of kid should be uint: %v", token.Header["kid"])
 		},
 	)
 
@@ -86,5 +86,5 @@ func (repo *TokenRepo) Validate(token string) (bool, error) {
 	if _, ok := tk.Claims.(*customClaim); ok && tk.Valid {
 		return true, nil
 	}
-	return false, status.Errorf(codes.InvalidArgument, "invalid token: %s", token)
+	return false, fmt.Errorf("invalid token: %s", token)
 }

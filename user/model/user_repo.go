@@ -54,7 +54,7 @@ func (repo *UserRepo) GetUserByEmailAndPassword(email, password string) (*User, 
 	u := &User{}
 
 	if repo.db.Where("email=?", email).First(u).RecordNotFound() {
-		return nil, errors.New("user not found in db")
+		return nil, errors.New("user not found")
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(u.Password), []byte(password)); err != nil {
@@ -68,7 +68,7 @@ func (repo *UserRepo) GetUserByEmailAndPassword(email, password string) (*User, 
 func (repo *UserRepo) GetUserByEmail(email string) (*User, error) {
 	u := &User{}
 	if repo.db.Where("email=?", email).First(u).RecordNotFound() {
-		return nil, errors.New("user not found in db")
+		return nil, errors.New("user not found")
 	}
 
 	return u, nil
@@ -78,7 +78,7 @@ func (repo *UserRepo) GetUserByEmail(email string) (*User, error) {
 func (repo *UserRepo) GetUserByID(id uint64) (*User, error) {
 	u := &User{}
 	if repo.db.Where("id=?", id).First(u).RecordNotFound() {
-		return nil, errors.New("user not found in db")
+		return nil, errors.New("user not found")
 	}
 
 	return u, nil
