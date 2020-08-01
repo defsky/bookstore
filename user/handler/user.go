@@ -76,7 +76,13 @@ func (h *handler) Get(ctx context.Context, req *user.User) (resp *user.Response,
 	var u *model.User
 	resp = &user.Response{}
 
-	u, err = h.repo.GetUserByEmail(req.Email)
+	if req.Id > 0 {
+		u, err = h.repo.GetUserByID(req.Id)
+	} else if len(req.Email) > 0 {
+		u, err = h.repo.GetUserByEmail(req.Email)
+	} else {
+		err = status.Error(codes.InvalidArgument, "need user id or email")
+	}
 	if err != nil {
 		log.Println(err)
 

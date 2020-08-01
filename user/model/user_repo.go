@@ -73,3 +73,13 @@ func (repo *UserRepo) GetUserByEmail(email string) (*User, error) {
 
 	return u, nil
 }
+
+// GetUserByID ...
+func (repo *UserRepo) GetUserByID(id uint64) (*User, error) {
+	u := &User{}
+	if repo.db.Where("id=?", id).First(u).RecordNotFound() {
+		return nil, errors.New("user not found in db")
+	}
+
+	return u, nil
+}

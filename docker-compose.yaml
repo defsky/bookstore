@@ -13,6 +13,19 @@ services:
     depends_on:
       - user
       - etcd
+  user-web:
+    build: ./user-web
+    restart: always
+    ports: 
+      - 8080:80
+    environment:
+      MICRO_REGISTRY: "etcd"
+      MICRO_REGISTRY_ADDRESS: "etcd:2379"
+      PORT: 80
+      GIN_MODE: debug
+    depends_on:
+      - user
+      - etcd
   user:
     build: ./user
     restart: always
