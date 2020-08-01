@@ -14,7 +14,7 @@ swagger:
 .PHONY: build
 build: swagger
 
-	go build -o user-web *.go
+	go build -o user-api *.go
 
 .PHONY: test
 test:

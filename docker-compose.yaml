@@ -13,8 +13,8 @@ services:
     depends_on:
       - user
       - etcd
-  user-web:
-    build: ./user-web
+  user-api:
+    build: ./user-api
     restart: always
     ports: 
       - 8080:80

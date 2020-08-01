@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/defsky/bookstore/user-web/controller"
+	"github.com/defsky/bookstore/user-api/controller"
 	"github.com/gin-gonic/gin"
 
 	ginSwagger "github.com/swaggo/gin-swagger"
 	swgFiles "github.com/swaggo/gin-swagger/swaggerFiles"
 
-	_ "github.com/defsky/bookstore/user-web/docs"
+	_ "github.com/defsky/bookstore/user-api/docs"
 )
 
 // @title Bookstore API
@@ -47,7 +47,7 @@ func main() {
 
 	authed.GET("/", func(c *gin.Context) {
 		c.JSON(http.StatusOK, gin.H{
-			"title": "user-web",
+			"title": "user-api",
 		})
 	})
 

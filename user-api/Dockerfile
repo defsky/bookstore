@@ -4,6 +4,6 @@ RUN mkdir /app
 
 WORKDIR /app
 
-ADD user-web ./user-web
+ADD user-api ./user-api
 
-CMD [ "./user-web" ]
+CMD [ "./user-api" ]

@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/defsky/bookstore/user-web/httputil"
+	"github.com/defsky/bookstore/user-api/httputil"
 	"github.com/gin-gonic/gin"
 )
 

@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/defsky/bookstore/micro"
-	"github.com/defsky/bookstore/user-web/model"
+	"github.com/defsky/bookstore/user-api/model"
 
 	userPb "github.com/defsky/bookstore/proto/user"
 )
