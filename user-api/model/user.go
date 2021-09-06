@@ -30,3 +30,11 @@ func (u User) Validate() error {
 
 	return nil
 }
+
+// UserList is a list of user info
+type UserList struct {
+	PageIndex  int     `json:"pageIndex"`
+	PageSize   int     `json:"pageSize"`
+	TotalPages int     `json:"totalPages"`
+	Data       []*User `json:"data"`
+}

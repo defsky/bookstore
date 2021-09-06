@@ -5,7 +5,7 @@ package com.afkplayer.service.user;
 service User {
 	rpc Create(user) returns (Response){}
 	rpc Get(user) returns (Response){}
-	rpc GetAll(Request) returns (Response){}
+	rpc GetList(UserList) returns (Response){}
 	rpc Auth(user) returns (Response){}
 	rpc ValidateToken(Token) returns (Response){}
 }
@@ -30,15 +30,17 @@ message Error {
 	string detail = 2;
 }
 
-message Request {
-	user user = 1;
-	Token token = 2;
+message UserList {
+	int32 pageIndex = 1;
+	int32 pageSize = 2;
+	int32 totalPages = 3;
+	repeated user data = 4;
 }
 
 message Response {
 	bool success = 1;
 	user user = 2;
-	repeated user users = 4;
+	UserList users = 4;
 	Token token = 3;
 	repeated Error errors = 5;
 }

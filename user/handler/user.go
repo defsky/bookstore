@@ -2,6 +2,7 @@ package handler
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"log"
 
@@ -108,8 +109,36 @@ func (h *handler) Get(ctx context.Context, req *user.User) (resp *user.Response,
 	return
 }
 
-func (h *handler) GetAll(ctx context.Context, req *user.Request) (resp *user.Response, err error) {
-	log.Printf("request for GetAll: %v", req)
+func (h *handler) GetList(ctx context.Context, req *user.UserList) (resp *user.Response, err error) {
+	log.Printf("request for GetList: %v", req)
+	resp = &user.Response{}
+
+	list, er := h.repo.GetUserList(req.PageIndex, req.PageSize)
+	if er != nil {
+		log.Printf("GetList error: %s", er)
+
+		resp.Success = false
+		err = status.Errorf(codes.InvalidArgument, "GetList failed: %s", er)
+
+		return
+	}
+	msg, _ := json.Marshal(list)
+	log.Printf("response for GetList: %s", string(msg))
+
+	resp.Success = true
+	resp.Users = &user.UserList{
+		PageIndex:  list.PageIndex,
+		PageSize:   list.PageSize,
+		TotalPages: list.TotalPages,
+		Data:       make([]*user.User, 0),
+	}
+	for _, u := range list.Data {
+		resp.Users.Data = append(resp.Users.Data, &user.User{
+			Id:    uint64(u.ID),
+			Name:  u.Name,
+			Email: u.Email,
+		})
+	}
 	return
 }
 
@@ -142,13 +171,18 @@ func (h *handler) Auth(ctx context.Context, req *user.User) (resp *user.Response
 
 func (h *handler) ValidateToken(ctx context.Context, req *user.Token) (resp *user.Response, err error) {
 	log.Printf("request for validate: %v", req)
+
 	var valid bool
-	valid, err = h.tkRepo.Validate(req.Value)
-	if err != nil {
-		err = status.Errorf(codes.Internal, "validate failed: %s", err)
-	}
 	resp = &user.Response{}
+
+	valid, err = h.tkRepo.Validate(req.Value)
 	resp.Success = valid
+
+	if err != nil {
+		log.Printf("validate failed: %s", err)
+		err = status.Errorf(codes.Internal, "validate failed: %s", err)
+		return
+	}
 
 	log.Printf("response for validate: %v", valid)
 

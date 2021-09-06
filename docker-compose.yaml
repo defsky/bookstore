@@ -6,6 +6,7 @@ version: '3.1'
 services:
   user-cli:
     build: ./user-cli
+    restart: always
     tty: true
     environment:
       MICRO_REGISTRY: "etcd"
@@ -43,6 +44,7 @@ services:
       - etcd
   database:
     image: postgres
+    restart: always
     environment:
       POSTGRES_PASSWORD: mypasswd
       PGDATA: /var/lib/postgresql/data/pgdata
@@ -51,6 +53,7 @@ services:
       - ./user/data:/var/lib/postgresql/data/pgdata
   etcd:
     image: bitnami/etcd
+    restart: always
     environment:
       - ALLOW_NONE_AUTHENTICATION=yes
       # - ETCD_ADVERTISE_CLIENT_URLS=http://etcd:2379

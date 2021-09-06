@@ -4,13 +4,13 @@ import (
 	"log"
 	"net/http"
 
-	"github.com/defsky/bookstore/user-api/controller"
 	"github.com/gin-gonic/gin"
-
 	ginSwagger "github.com/swaggo/gin-swagger"
 	swgFiles "github.com/swaggo/gin-swagger/swaggerFiles"
 
+	"github.com/defsky/bookstore/user-api/controller"
 	_ "github.com/defsky/bookstore/user-api/docs"
+	"github.com/defsky/bookstore/user-api/httputil"
 )
 
 // @title Bookstore API
@@ -34,12 +34,13 @@ func main() {
 	authed := s.Group("/admin", basicAuth)
 
 	c := controller.NewController()
-	v1 := s.Group("/api/v1")
+	v1 := s.Group("/api/v1", httputil.MethodFilter([]string{"GET", "POST"}))
 	{
 		users := v1.Group("/users")
 		{
-			users.GET(":id", c.GetUser)
-			users.POST("", c.AddUser)
+			users.POST("/", c.AddUser)
+			users.GET("/", c.GetUserList)
+			users.GET("/:id", c.GetUser)
 		}
 	}
 
@@ -55,9 +56,11 @@ func main() {
 
 	s.GET("/alive", statusHandler)
 
-	//url := ginSwagger.URL("http://192.168.100.210:8080/swg/doc.json") // The url pointing to API definition
-	s.GET("/swagger/*any", ginSwagger.WrapHandler(swgFiles.Handler)) //, url))
-
+	//url := ginSwagger.URL("swagger.json") // The url pointing to API definition
+	s.GET("/swagger/*any", ginSwagger.WrapHandler(swgFiles.Handler))
+	s.GET("/swg", func(c *gin.Context) {
+		c.Redirect(http.StatusPermanentRedirect, "/swagger/index.html")
+	})
 	if err := s.Run(); err != nil {
 		log.Fatalln(err)
 	}

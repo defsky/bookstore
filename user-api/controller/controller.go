@@ -39,6 +39,31 @@ func (c *Controller) getUserByID(id int) (*model.User, error) {
 	}, nil
 }
 
+func (c *Controller) getUserList(n, s int) (*model.UserList, error) {
+	resp, err := c.userClient.GetList(context.Background(), &userPb.UserList{
+		PageIndex: int32(n),
+		PageSize:  int32(s),
+	})
+	if err != nil {
+		return nil, err
+	}
+	list := &model.UserList{
+		PageIndex:  int(resp.Users.PageIndex),
+		PageSize:   int(resp.Users.PageSize),
+		TotalPages: int(resp.Users.TotalPages),
+		Data:       make([]*model.User, 0),
+	}
+	for _, u := range resp.Users.Data {
+		list.Data = append(list.Data, &model.User{
+			ID:       int(u.Id),
+			Name:     u.Name,
+			Email:    u.Email,
+			Password: u.Password,
+		})
+	}
+	return list, nil
+}
+
 func (c *Controller) createUser(u model.User) (*model.User, error) {
 	resp, err := c.userClient.Create(context.Background(), &userPb.User{
 		Name:     u.Name,
