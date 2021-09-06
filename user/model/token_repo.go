@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/defsky/bookstore/basic/db"
-	"github.com/dgrijalva/jwt-go"
+	"github.com/golang-jwt/jwt/v4"
 	"github.com/jinzhu/gorm"
 )
 
